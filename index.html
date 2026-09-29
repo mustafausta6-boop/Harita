@@ -45,7 +45,7 @@ footer{max-width:1500px;margin:auto;padding:0 16px 20px;color:#8a94a4;font-size:
 </main>
 <footer>Veri: Excel çalışma kitabından oluşturulan veri seti · Harita: OpenStreetMap / GeoJSON</footer>
 <script>
-const GEO="https://raw.githubusercontent.com/cihadturhan/tr-geojson/master/geo/provinces.geojson";
+const GEO="https://raw.githubusercontent.com/ttezer/turkiye-harita-verisi/master/dist/geojson/provinces.geojson";
 let data=[],index={},map,geoLayer,chart,selected="";
 const norm=s=>(s||"").toLocaleUpperCase("tr-TR").replace(/İ/g,"İ").replace(/\s+/g," ").trim();
 const fmt=n=>new Intl.NumberFormat("tr-TR",{maximumFractionDigits:0}).format(n);
