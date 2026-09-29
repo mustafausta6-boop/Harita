@@ -51,12 +51,16 @@ const norm=s=>(s||"").toLocaleUpperCase("tr-TR").replace(/İ/g,"İ").replace(/\s
 const fmt=n=>new Intl.NumberFormat("tr-TR",{maximumFractionDigits:0}).format(n);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 async function init(){
- data=await fetch("data.json").then(r=>r.json());
+const [dataRes, geoRes] = await Promise.all([
+  fetch('data.json'),
+  fetch(GEO)
+]);
+data = await dataRes.json();
  for(const r of data){const k=norm(r.il);if(!index[k])index[k]={name:r.il,rows:[]};index[k].rows.push(r)}
  fill();
  map=L.map("map").setView([39,35],5.7);
  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap"}).addTo(map);
- const gj=await fetch(GEO).then(r=>r.json());
+ const gj=await geoRes.json();
  geoLayer=L.geoJSON(gj,{style:style,onEachFeature:(f,l)=>{
    const n=f.properties.name||f.properties.NAME_1||f.properties.province;l.bindTooltip(n,{sticky:true});
    l.on({mouseover:e=>e.target.setStyle({weight:2,fillOpacity:.9}),mouseout:e=>geoLayer.resetStyle(e.target),click:()=>select(n,true)});
