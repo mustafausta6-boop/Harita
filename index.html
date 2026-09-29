@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Türkiye Antrenör Dağılım Sistemi</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--line:#e3e7ee;--text:#162033;--muted:#697487;--blue:#2563eb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--text)}
+header{background:#fff;border-bottom:1px solid var(--line);padding:20px}.head{max-width:1500px;margin:auto}h1{margin:0;font-size:25px}.desc{color:var(--muted);margin-top:5px;font-size:13px}
+.filters{max-width:1500px;margin:16px auto 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}select,input{width:100%;padding:11px;border:1px solid #d7dde7;border-radius:9px;background:#fff}
+main{max-width:1500px;margin:auto;padding:0 16px 25px}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}.kpi,.card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 3px 15px #15294b0b}.kpi{padding:15px}.label{font-size:12px;color:var(--muted)}.num{font-size:26px;font-weight:bold;margin-top:5px}
+.grid{display:grid;grid-template-columns:1.45fr .75fr;gap:14px}.map{height:680px;border-radius:14px;overflow:hidden}.panel{padding:20px;min-height:680px;overflow:auto}.panel h2{margin:0;font-size:25px}.muted{font-size:12px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.mini{background:#f6f8fb;border-radius:10px;padding:12px}.mini b{display:block;font-size:21px;margin-top:3px}
+.chart{height:220px;margin-bottom:18px}.title{font-weight:bold;font-size:14px;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 5px;border-bottom:1px solid #edf0f3;text-align:left}th:last-child,td:last-child{text-align:right}.bar{height:6px;background:#e9edf3;border-radius:9px;margin-top:5px}.bar i{display:block;height:100%;background:var(--blue);border-radius:9px}
+.empty{min-height:600px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);padding:30px}
+footer{max-width:1500px;margin:auto;padding:0 16px 20px;color:#8a94a4;font-size:11px}
+.legend{background:#fff;padding:8px 10px;border-radius:8px;box-shadow:0 2px 12px #0002;font-size:11px}
+@media(max-width:950px){.filters{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.map{height:55vh;min-height:430px}.panel{min-height:auto}.empty{min-height:300px}}
+</style>
+</head>
+<body>
+<header><div class="head">
+<h1>Türkiye Antrenör Dağılım Sistemi</h1>
+<div class="desc">İl ve branş bazında antrenör mevcutlarını interaktif olarak görüntüleyin.</div>
+<div class="filters">
+<select id="province"><option value="">Tüm İller</option></select>
+<select id="branch"><option value="">Tüm Branşlar</option></select>
+<input id="search" placeholder="İl veya branş ara...">
+</div></div></header>
+<main>
+<section class="kpis">
+<div class="kpi"><div class="label">Toplam Antrenör</div><div class="num" id="total">0</div></div>
+<div class="kpi"><div class="label">İl Sayısı</div><div class="num" id="provinces">0</div></div>
+<div class="kpi"><div class="label">Branş Sayısı</div><div class="num" id="branches">0</div></div>
+<div class="kpi"><div class="label">En Yüksek İl</div><div class="num" id="top">-</div></div>
+</section>
+<section class="grid">
+<div class="card"><div id="map" class="map"></div></div>
+<div class="card"><div id="panel" class="panel"><div class="empty">Haritada bir il seçin veya yukarıdan il seçin.</div></div></div>
+</section>
+</main>
+<footer>Veri: Excel çalışma kitabından oluşturulan veri seti · Harita: OpenStreetMap / GeoJSON</footer>
+<script>
+const GEO="https://raw.githubusercontent.com/cihadturhan/tr-geojson/master/geo/provinces.geojson";
+let data=[],index={},map,geoLayer,chart,selected="";
+const norm=s=>(s||"").toLocaleUpperCase("tr-TR").replace(/İ/g,"İ").replace(/\s+/g," ").trim();
+const fmt=n=>new Intl.NumberFormat("tr-TR",{maximumFractionDigits:0}).format(n);
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+async function init(){
+ data=await fetch("data.json").then(r=>r.json());
+ for(const r of data){const k=norm(r.il);if(!index[k])index[k]={name:r.il,rows:[]};index[k].rows.push(r)}
+ fill();
+ map=L.map("map").setView([39,35],5.7);
+ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap"}).addTo(map);
+ const gj=await fetch(GEO).then(r=>r.json());
+ geoLayer=L.geoJSON(gj,{style:style,onEachFeature:(f,l)=>{
+   const n=f.properties.name||f.properties.NAME_1||f.properties.province;l.bindTooltip(n,{sticky:true});
+   l.on({mouseover:e=>e.target.setStyle({weight:2,fillOpacity:.9}),mouseout:e=>geoLayer.resetStyle(e.target),click:()=>select(n,true)});
+ }}).addTo(map);
+ let c=L.control({position:"bottomleft"});c.onAdd=()=>{let d=L.DomUtil.create("div","legend");d.textContent="Koyu renk = daha yüksek mevcut";return d};c.addTo(map);
+ province.onchange=e=>{selected=e.target.value;render();if(selected)zoom(selected)};
+ branch.onchange=render;search.oninput=searchFn;updateKpi();
+}
+function fill(){
+ Object.values(index).sort((a,b)=>a.name.localeCompare(b.name,"tr")).forEach(x=>province.insertAdjacentHTML("beforeend",`<option>${esc(x.name)}</option>`));
+ [...new Set(data.map(x=>x.brans))].sort((a,b)=>a.localeCompare(b,"tr")).forEach(x=>branch.insertAdjacentHTML("beforeend",`<option>${esc(x)}</option>`));
+}
+function currentRows(){
+ let b=branch.value;
+ return data.filter(r=>(!selected||norm(r.il)===norm(selected))&&(!b||norm(r.brans)===norm(b)));
+}
+function updateKpi(){
+ let rows=currentRows(), sums={};rows.forEach(r=>sums[r.il]=(sums[r.il]||0)+r.mevcut);
+ let top=Object.entries(sums).sort((a,b)=>b[1]-a[1])[0];
+ total.textContent=fmt(rows.reduce((a,r)=>a+r.mevcut,0));
+ provinces.textContent=fmt(new Set(rows.map(r=>norm(r.il))).size);
+ branches.textContent=fmt(new Set(rows.map(r=>norm(r.brans))).size);
+ document.getElementById("top").textContent=top?top[0]:"-";
+}
+function style(f){
+ const n=norm(f.properties.name||f.properties.NAME_1||f.properties.province),b=branch.value;
+ const v=data.filter(r=>norm(r.il)===n&&(!b||norm(r.brans)===norm(b))).reduce((a,r)=>a+r.mevcut,0);
+ const vals=Object.values(index).map(x=>data.filter(r=>norm(r.il)===norm(x.name)&&(!b||norm(r.brans)===norm(b))).reduce((a,r)=>a+r.mevcut,0));
+ const mx=Math.max(...vals,1);
+ return {color:"#fff",weight:norm(selected)===n?3:1,fillColor:"#2563eb",fillOpacity:v?.25+.65*v/mx:.1};
+}
+function select(n,z){selected=n;province.value=Object.values(index).find(x=>norm(x.name)===norm(n))?.name||n;render();if(z)zoom(n)}
+function zoom(n){geoLayer.eachLayer(l=>{let x=l.feature.properties.name||l.feature.properties.NAME_1||l.feature.properties.province;if(norm(x)===norm(n))map.fitBounds(l.getBounds(),{padding:[20,20],maxZoom:8})})}
+function render(){
+ updateKpi();if(geoLayer)geoLayer.setStyle(style);
+ if(!selected){panel.innerHTML='<div class="empty">Haritadan bir il seçin veya yukarıdan il seçin.</div>';if(chart){chart.destroy();chart=null}return}
+ let b=branch.value,rows=data.filter(r=>norm(r.il)===norm(selected)&&(!b||norm(r.brans)===norm(b))).sort((a,b)=>b.mevcut-a.mevcut);
+ let sum=rows.reduce((a,r)=>a+r.mevcut,0),mx=Math.max(...rows.map(r=>r.mevcut),1),top=rows.slice(0,8);
+ panel.innerHTML=`<h2>${esc(selected)}</h2><div class="muted">Görünüm: ${esc(b||"Tüm branşlar")}</div>
+ <div class="stats"><div class="mini"><span class="muted">Toplam antrenör</span><b>${fmt(sum)}</b></div><div class="mini"><span class="muted">Branş</span><b>${fmt(rows.filter(x=>x.mevcut>0).length)}</b></div></div>
+ <div class="chart"><canvas id="chart"></canvas></div><div class="title">Branş detayları</div>
+ <table><thead><tr><th>Branş</th><th>Mevcut</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.brans)}<div class="bar"><i style="width:${r.mevcut/mx*100}%"></i></div></td><td>${fmt(r.mevcut)}</td></tr>`).join("")}</tbody></table>`;
+ chart=new Chart(document.getElementById("chart"),{type:"bar",data:{labels:top.map(x=>x.brans),datasets:[{data:top.map(x=>x.mevcut),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+}
+function searchFn(e){let q=norm(e.target.value);if(!q)return;let p=Object.values(index).find(x=>norm(x.name).includes(q));if(p){select(p.name,true);return}let r=data.find(x=>norm(x.brans).includes(q));if(r){branch.value=r.brans;select(r.il,true)}}
+init().catch(e=>{console.error(e);panel.innerHTML='<div class="empty">Uygulama yüklenemedi. data.json ve index.html aynı klasörde olmalıdır.</div>'});
+</script>
+</body></html>
