@@ -6,20 +6,21 @@
 <meta name="theme-color" content="#2563eb">
 <title>Türkiye Antrenör Dağılım Sistemi</title>
 <link rel="preconnect" href="https://unpkg.com" crossorigin>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{--bg:#f4f6fa;--card:#fff;--line:#e3e7ee;--text:#162033;--muted:#697487;--blue:#2563eb;--blue2:#1d4ed8;--shadow:0 3px 15px #15294b0b}
+:root{--bg:#f4f6fa;--card:#fff;--line:#e3e7ee;--text:#162033;--muted:#697487;--blue:#2563eb;--shadow:0 3px 15px #15294b0b}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--text);-webkit-text-size-adjust:100%}
 header{background:#fff;border-bottom:1px solid var(--line);padding:18px 16px}.head{max-width:1500px;margin:auto}h1{margin:0;font-size:clamp(20px,2vw,25px)}.desc{color:var(--muted);margin-top:5px;font-size:13px}
 .filters{max-width:1500px;margin:14px auto 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}select,input{width:100%;min-height:44px;padding:10px 12px;border:1px solid #d7dde7;border-radius:9px;background:#fff;color:var(--text);font:inherit}select:focus,input:focus{outline:2px solid #93c5fd;outline-offset:1px}
 main{max-width:1500px;margin:auto;padding:0 16px 24px}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}.kpi,.card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}.kpi{padding:14px}.label{font-size:12px;color:var(--muted)}.num{font-size:clamp(21px,2.2vw,26px);font-weight:700;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,.75fr);gap:14px}.map{height:680px;border-radius:14px;overflow:hidden;background:#e9eef5}.panel{padding:18px;min-height:680px;overflow:auto}.panel h2{margin:0;font-size:24px}.muted{font-size:12px;color:var(--muted)}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.mini{background:#f6f8fb;border-radius:10px;padding:12px}.mini b{display:block;font-size:20px;margin-top:3px}.chart{height:220px;margin-bottom:18px}.title{font-weight:700;font-size:14px;margin:10px 0}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 5px;border-bottom:1px solid #edf0f3;text-align:left}th:last-child,td:last-child{text-align:right}.bar{height:5px;background:#e9edf3;border-radius:9px;margin-top:5px}.bar i{display:block;height:100%;background:var(--blue);border-radius:9px}.empty{min-height:600px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);padding:30px}.loading{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px}.error{padding:20px;color:#991b1b;background:#fef2f2;border-radius:10px}
+.grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,.75fr);gap:14px}.map{height:680px;border-radius:14px;overflow:hidden;background:#e9eef5;position:relative}.panel{padding:18px;min-height:680px;overflow:auto}.panel h2{margin:0;font-size:24px}.muted{font-size:12px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.mini{background:#f6f8fb;border-radius:10px;padding:12px}.mini b{display:block;font-size:20px;margin-top:3px}.title{font-weight:700;font-size:14px;margin:14px 0 8px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 5px;border-bottom:1px solid #edf0f3;text-align:left}th:last-child,td:last-child{text-align:right}.bar{height:5px;background:#e9edf3;border-radius:9px;margin-top:5px}.bar i{display:block;height:100%;background:var(--blue);border-radius:9px}.empty{min-height:600px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);padding:30px}.loading{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px}.map-status{position:absolute;z-index:500;left:10px;top:10px;background:#fff;padding:7px 10px;border-radius:8px;box-shadow:0 2px 10px #0002;font-size:11px;color:var(--muted)}.error{padding:20px;color:#991b1b;background:#fef2f2;border-radius:10px}
+.chart{display:grid;gap:7px;margin:8px 0 18px}.chart-row{display:grid;grid-template-columns:minmax(90px,38%) 1fr 55px;align-items:center;gap:7px;font-size:11px}.chart-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chart-track{height:14px;background:#edf1f6;border-radius:8px;overflow:hidden}.chart-fill{height:100%;background:var(--blue);border-radius:8px}.chart-value{text-align:right;font-weight:700}
 footer{max-width:1500px;margin:auto;padding:0 16px 20px;color:#8a94a4;font-size:11px}.legend{background:#fff;padding:8px 10px;border-radius:8px;box-shadow:0 2px 12px #0002;font-size:11px}.leaflet-container{font:12px Arial,Helvetica,sans-serif}.leaflet-control-zoom a{width:34px!important;height:34px!important;line-height:34px!important}.leaflet-control-attribution{font-size:9px}
-@media(max-width:950px){header{padding:15px 12px}.filters{grid-template-columns:1fr;gap:8px}.kpis{grid-template-columns:1fr 1fr;gap:8px}.grid{grid-template-columns:1fr;gap:10px}.map{height:52vh;min-height:380px;max-height:560px}.panel{min-height:0;max-height:none;padding:15px}.empty{min-height:220px}.chart{height:210px}}
-@media(max-width:560px){main{padding:0 10px 18px}.kpis{margin:10px 0}.kpi{padding:11px}.num{font-size:20px}.grid{gap:8px}.map{height:48vh;min-height:330px}.panel h2{font-size:21px}.stats{gap:8px}.mini{padding:10px}table{font-size:12px}th,td{padding:7px 4px}.leaflet-control-zoom{margin-top:10px!important;margin-left:10px!important}}
+@media(max-width:950px){header{padding:15px 12px}.filters{grid-template-columns:1fr;gap:8px}.kpis{grid-template-columns:1fr 1fr;gap:8px}.grid{grid-template-columns:1fr;gap:10px}.map{height:52vh;min-height:380px;max-height:560px}.panel{min-height:0;max-height:none;padding:15px}.empty{min-height:220px}}
+@media(max-width:560px){main{padding:0 10px 18px}.kpis{margin:10px 0}.kpi{padding:11px}.num{font-size:20px}.map{height:48vh;min-height:330px}.panel h2{font-size:21px}.stats{gap:8px}.mini{padding:10px}table{font-size:12px}th,td{padding:7px 4px}.leaflet-control-zoom{margin-top:10px!important;margin-left:10px!important}.chart-row{grid-template-columns:80px 1fr 45px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 </head>
@@ -40,74 +41,83 @@ footer{max-width:1500px;margin:auto;padding:0 16px 20px;color:#8a94a4;font-size:
 <div class="kpi"><div class="label">En Yüksek İl</div><div class="num" id="top">-</div></div>
 </section>
 <section class="grid">
-<div class="card"><div id="map" class="map"><div class="loading">Harita yükleniyor...</div></div></div>
+<div class="card"><div id="map" class="map"><div class="loading">Harita hazırlanıyor...</div></div></div>
 <div class="card"><div id="panel" class="panel"><div class="empty">Haritada bir il seçin veya yukarıdan il seçin.</div></div></div>
 </section>
 </main>
 <footer>Veri: Excel çalışma kitabından oluşturulan veri seti · Harita: OpenStreetMap / GeoJSON</footer>
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
 'use strict';
 const GEO='https://raw.githubusercontent.com/cihadturhan/tr-geojson/master/geo/provinces.geojson';
-let data=[], index=new Map(), provinceTotals=new Map(), branchTotals=new Map(), comboTotals=new Map();
-let map=null,geoLayer=null,chart=null,selected='';
+let data=[],index=new Map(),provinceTotals=new Map(),comboTotals=new Map(),branchesSet=new Set();
+let map=null,geoLayer=null,selected='',mapMax=1,searchTimer=null;
 const $=id=>document.getElementById(id);
-const norm=s=>(s||'').toLocaleUpperCase('tr-TR').replace(/\s+/g,' ').trim();
-const fmt=n=>new Intl.NumberFormat('tr-TR',{maximumFractionDigits:0}).format(n||0);
-const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-function key(a,b){return norm(a)+'\u0000'+norm(b)}
+const norm=s=>(s??'').toLocaleUpperCase('tr-TR').replace(/\s+/g,' ').trim();
+const fmt=n=>new Intl.NumberFormat('tr-TR',{maximumFractionDigits:0}).format(Number(n)||0);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+const key=(a,b)=>norm(a)+'\u0000'+norm(b);
 function aggregate(){
- index.clear();provinceTotals.clear();branchTotals.clear();comboTotals.clear();
- for(const r of data){
-  const p=norm(r.il), b=norm(r.brans), v=Number(r.mevcut)||0;
-  if(!index.has(p))index.set(p,{name:r.il,rows:[]}); index.get(p).rows.push(r);
-  provinceTotals.set(p,(provinceTotals.get(p)||0)+v); branchTotals.set(b,(branchTotals.get(b)||0)+v); comboTotals.set(key(p,b),(comboTotals.get(key(p,b))||0)+v);
- }
+ index.clear();provinceTotals.clear();comboTotals.clear();branchesSet.clear();
+ for(const r of data){const p=norm(r.il),b=norm(r.brans),v=Number(r.mevcut)||0;if(!index.has(p))index.set(p,{name:r.il,rows:[]});index.get(p).rows.push(r);provinceTotals.set(p,(provinceTotals.get(p)||0)+v);const k=key(p,b);comboTotals.set(k,(comboTotals.get(k)||0)+v);branchesSet.add(r.brans)}
 }
 function fill(){
- const provinces=[...index.values()].sort((a,b)=>a.name.localeCompare(b.name,'tr'));
- const branches=[...new Set(data.map(x=>x.brans))].sort((a,b)=>a.localeCompare(b,'tr'));
- $('province').insertAdjacentHTML('beforeend',provinces.map(x=>`<option value="${esc(x.name)}">${esc(x.name)}</option>`).join(''));
- $('branch').insertAdjacentHTML('beforeend',branches.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join(''));
+ const pfrag=document.createDocumentFragment();[...index.values()].sort((a,b)=>a.name.localeCompare(b.name,'tr')).forEach(x=>{const o=document.createElement('option');o.value=x.name;o.textContent=x.name;pfrag.appendChild(o)});$('province').appendChild(pfrag);
+ const bfrag=document.createDocumentFragment();[...branchesSet].sort((a,b)=>a.localeCompare(b,'tr')).forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent=x;bfrag.appendChild(o)});$('branch').appendChild(bfrag);
 }
-function filteredRows(){const b=norm($('branch').value); return data.filter(r=>(!selected||norm(r.il)===norm(selected))&&(!b||norm(r.brans)===b));}
+function rowsForProvince(){const p=norm(selected),b=norm($('branch').value);const rows=index.get(p)?.rows||[];return rows.filter(r=>!b||norm(r.brans)===b).sort((a,b)=>(Number(b.mevcut)||0)-(Number(a.mevcut)||0));}
 function updateKpi(){
- const b=norm($('branch').value); let total=0,ps=new Set(),bs=new Set(),tops=[];
- if(!b&&!selected){for(const [p,v] of provinceTotals){total+=v;ps.add(p)} for(const r of data)bs.add(norm(r.brans)); tops=[...provinceTotals.entries()];}
- else {for(const r of data){if((!selected||norm(r.il)===norm(selected))&&(!b||norm(r.brans)===b)){const v=Number(r.mevcut)||0;total+=v;ps.add(norm(r.il));bs.add(norm(r.brans))}} tops=[...ps].map(p=>[p,provinceTotals.get(p)||0]); if(b)tops=[...ps].map(p=>[p,comboTotals.get(key(p,b))||0]);}
- tops.sort((a,b)=>b[1]-a[1]); $('total').textContent=fmt(total);$('provinces').textContent=fmt(ps.size);$('branches').textContent=fmt(bs.size);$('top').textContent=tops[0]?index.get(tops[0][0])?.name||tops[0][0]:'-';
+ const b=norm($('branch').value),hasProvince=!!selected;let total=0,ps=0,bs=0,topName='-',topValue=-1;
+ if(!hasProvince&&!b){for(const [p,v] of provinceTotals){total+=v;ps++;if(v>topValue){topValue=v;topName=index.get(p)?.name||p}}bs=branchesSet.size}
+ else if(hasProvince){const rows=rowsForProvince();const seen=new Set();for(const r of rows){const v=Number(r.mevcut)||0;total+=v;seen.add(norm(r.brans));}ps=total||rows.length?1:0;bs=seen.size;topName=index.get(norm(selected))?.name||selected;}
+ else {const seenP=new Set();for(const r of data){if(!b||norm(r.brans)===b){const p=norm(r.il),v=Number(r.mevcut)||0;total+=v;seenP.add(p);const cv=comboTotals.get(key(p,b))||0;if(cv>topValue){topValue=cv;topName=index.get(p)?.name||p}}}ps=seenP.size;bs=b?1:branchesSet.size}
+ $('total').textContent=fmt(total);$('provinces').textContent=fmt(ps);$('branches').textContent=fmt(bs);$('top').textContent=topName;
 }
-function style(f){
- const n=norm(f.properties.name||f.properties.NAME_1||f.properties.province),b=norm($('branch').value); const v=b?(comboTotals.get(key(n,b))||0):(provinceTotals.get(n)||0);
- const values=b?[...index.keys()].map(p=>comboTotals.get(key(p,b))||0):[...provinceTotals.values()]; const mx=Math.max(...values,1);
- return {color:'#fff',weight:norm(selected)===n?3:1,fillColor:'#2563eb',fillOpacity:v?.22+.65*v/mx:.08};
-}
-function select(n,z){selected=n;$('province').value=index.get(norm(n))?.name||n;render();if(z&&map)zoom(n)}
-function zoom(n){geoLayer?.eachLayer(l=>{const x=l.feature.properties.name||l.feature.properties.NAME_1||l.feature.properties.province;if(norm(x)===norm(n))map.fitBounds(l.getBounds(),{padding:[18,18],maxZoom:8})})}
+function currentMapValue(p){const b=norm($('branch').value);return b?(comboTotals.get(key(p,b))||0):(provinceTotals.get(p)||0)}
+function updateMapScale(){const b=norm($('branch').value);mapMax=1;if(b){for(const p of index.keys())mapMax=Math.max(mapMax,comboTotals.get(key(p,b))||0)}else for(const v of provinceTotals.values())mapMax=Math.max(mapMax,v)}
+function style(f){const n=norm(f.properties.name||f.properties.NAME_1||f.properties.province),v=currentMapValue(n);return{color:'#fff',weight:norm(selected)===n?3:1,fillColor:'#2563eb',fillOpacity:v?.22+.65*v/mapMax:.08}}
+function refreshMap(){updateMapScale();if(geoLayer)geoLayer.setStyle(style)}
+function select(n,zoomIt=false){selected=n;$('province').value=index.get(norm(n))?.name||n;render();if(zoomIt&&map)zoom(n)}
+function zoom(n){if(!geoLayer)return;geoLayer.eachLayer(l=>{const x=l.feature?.properties?.name||l.feature?.properties?.NAME_1||l.feature?.properties?.province;if(norm(x)===norm(n))map.fitBounds(l.getBounds(),{padding:[18,18],maxZoom:8})})}
 function render(){
- updateKpi(); if(geoLayer)geoLayer.setStyle(style);
- if(!selected){$('panel').innerHTML='<div class="empty">Haritadan bir il seçin veya yukarıdan il seçin.</div>';if(chart){chart.destroy();chart=null}return}
- const b=norm($('branch').value), rows=data.filter(r=>norm(r.il)===norm(selected)&&(!b||norm(r.brans)===b)).sort((a,b)=>Number(b.mevcut)-Number(a.mevcut));
- const sum=rows.reduce((a,r)=>a+(Number(r.mevcut)||0),0), mx=Math.max(...rows.map(r=>Number(r.mevcut)||0),1), top=rows.slice(0,8);
- $('panel').innerHTML=`<h2>${esc(selected)}</h2><div class="muted">Görünüm: ${esc($('branch').value||'Tüm branşlar')}</div><div class="stats"><div class="mini"><span class="muted">Toplam antrenör</span><b>${fmt(sum)}</b></div><div class="mini"><span class="muted">Branş</span><b>${fmt(rows.filter(x=>(Number(x.mevcut)||0)>0).length)}</b></div></div><div class="chart"><canvas id="chart"></canvas></div><div class="title">Branş detayları</div><table><thead><tr><th>Branş</th><th>Mevcut</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.brans)}<div class="bar"><i style="width:${Math.min(100,(Number(r.mevcut)||0)/mx*100)}%"></i></div></td><td>${fmt(r.mevcut)}</td></tr>`).join('')}</tbody></table>`;
- if(window.Chart){chart=new Chart($('chart'),{type:'bar',data:{labels:top.map(x=>x.brans),datasets:[{data:top.map(x=>Number(x.mevcut)||0),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',animation:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}})}
+ updateKpi();refreshMap();
+ if(!selected){$('panel').innerHTML='<div class="empty">Haritadan bir il seçin veya yukarıdan il seçin.</div>';return}
+ const rows=rowsForProvince(),sum=rows.reduce((a,r)=>a+(Number(r.mevcut)||0),0),mx=Math.max(...rows.map(r=>Number(r.mevcut)||0),1),top=rows.slice(0,8);
+ const chart=top.length?`<div class="chart">${top.map(r=>`<div class="chart-row"><div class="chart-label" title="${esc(r.brans)}">${esc(r.brans)}</div><div class="chart-track"><div class="chart-fill" style="width:${Math.min(100,(Number(r.mevcut)||0)/mx*100)}%"></div></div><div class="chart-value">${fmt(r.mevcut)}</div></div>`).join('')}</div>`:'';
+ $('panel').innerHTML=`<h2>${esc(selected)}</h2><div class="muted">Görünüm: ${esc($('branch').value||'Tüm branşlar')}</div><div class="stats"><div class="mini"><span class="muted">Toplam antrenör</span><b>${fmt(sum)}</b></div><div class="mini"><span class="muted">Branş</span><b>${fmt(rows.filter(x=>(Number(x.mevcut)||0)>0).length)}</b></div></div>${chart}<div class="title">Branş detayları</div><table><thead><tr><th>Branş</th><th>Mevcut</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.brans)}<div class="bar"><i style="width:${Math.min(100,(Number(r.mevcut)||0)/mx*100)}%"></i></div></td><td>${fmt(r.mevcut)}</td></tr>`).join('')}</tbody></table>`;
 }
-let searchTimer; function searchFn(e){clearTimeout(searchTimer);const q=norm(e.target.value);searchTimer=setTimeout(()=>{if(!q)return;const p=[...index.values()].find(x=>norm(x.name).includes(q));if(p){select(p.name,true);return}const r=data.find(x=>norm(x.brans).includes(q));if(r){$('branch').value=r.brans;select(r.il,true)}},120)}
-async function init(){
+function searchFn(e){clearTimeout(searchTimer);const q=norm(e.target.value);searchTimer=setTimeout(()=>{if(!q)return;const p=[...index.values()].find(x=>norm(x.name).includes(q));if(p){select(p.name,true);return}const r=data.find(x=>norm(x.brans).includes(q));if(r){$('branch').value=r.brans;select(r.il,true)}},180)}
+async function fetchJson(url,timeout=12000){const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(url,{signal:c.signal,cache:'default'});if(!r.ok)throw new Error(url+' yüklenemedi');return await r.json()}finally{clearTimeout(t)}}
+async function loadGeo(){
  try{
-  const res=await fetch('data.json',{cache:'no-store'});if(!res.ok)throw new Error('data.json yüklenemedi');data=await res.json();aggregate();fill();updateKpi();
-  await new Promise(resolve=>window.requestIdleCallback?requestIdleCallback(resolve,{timeout:400}):setTimeout(resolve,0));
-  map=L.map('map',{preferCanvas:true,zoomControl:true,attributionControl:true,tap:true}).setView([39,35],5.7);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18,crossOrigin:true}).addTo(map);
-  const gj=await fetch(GEO,{cache:'force-cache'}).then(r=>{if(!r.ok)throw new Error('GeoJSON yüklenemedi');return r.json()});
+  const gj=await fetchJson(GEO,9000);
   geoLayer=L.geoJSON(gj,{style,onEachFeature:(f,l)=>{const n=f.properties.name||f.properties.NAME_1||f.properties.province;l.bindTooltip(n,{sticky:true});l.on({mouseover:e=>e.target.setStyle({weight:2,fillOpacity:.9}),mouseout:e=>geoLayer.resetStyle(e.target),click:()=>select(n,true)})}}).addTo(map);
   const c=L.control({position:'bottomleft'});c.onAdd=()=>{const d=L.DomUtil.create('div','legend');d.textContent='Koyu renk = daha yüksek mevcut';return d};c.addTo(map);
-  $('map').querySelector('.loading')?.remove();
- }catch(e){console.error(e);$('map').innerHTML='<div class="error">Uygulama yüklenemedi. data.json ve index.html aynı klasörde olmalıdır.</div>'}
+  $('map-status')?.remove();
+ }catch(e){console.warn('İl sınırları yüklenemedi:',e);$('map-status')?.remove()}
 }
-$('province').addEventListener('change',e=>{selected=e.target.value;render();if(selected)zoom(selected)});$('branch').addEventListener('change',render);$('search').addEventListener('input',searchFn);
+async function init(){
+ try{
+  // Haritayı veri beklemeden başlatıyoruz; böylece tarayıcı donmuş gibi görünmez.
+  map=L.map('map',{preferCanvas:true,zoomControl:true,tap:true,fadeAnimation:false,zoomAnimation:false,markerZoomAnimation:false}).setView([39,35],5.7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18,updateWhenIdle:true,keepBuffer:1}).addTo(map);
+  $('map').querySelector('.loading')?.remove();
+  const status=document.createElement('div');status.id='map-status';status.className='map-status';status.textContent='İl sınırları yükleniyor…';$('map').appendChild(status);
+  // Veri ile GeoJSON aynı anda yüklenir. GeoJSON gecikirse uygulama yine kullanılabilir.
+  const dataPromise=fetchJson('data.json',15000);
+  const geoPromise=loadGeo();
+  data=await dataPromise;
+  if(!Array.isArray(data))throw new Error('data.json bir dizi içermiyor');
+  aggregate();fill();updateKpi();
+  await geoPromise;
+  if(map)map.invalidateSize();
+ }catch(e){console.error(e);$('panel').innerHTML='<div class="error"><b>Veri yüklenemedi.</b><br>data.json dosyasının index.html ile aynı klasörde olduğundan emin olun.</div>'}
+}
+$('province').addEventListener('change',e=>{selected=e.target.value;render();if(selected)zoom(selected)});
+$('branch').addEventListener('change',()=>{render()});
+$('search').addEventListener('input',searchFn);
 window.addEventListener('resize',()=>{if(map)map.invalidateSize({debounceMoveend:true})},{passive:true});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,0));else setTimeout(init,0);
 </script>
-</body></html>
+</body>
+</html>
