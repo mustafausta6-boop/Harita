@@ -45,7 +45,7 @@ footer{max-width:1500px;margin:auto;padding:0 16px 20px;color:#8a94a4;font-size:
 <div class="card"><div id="panel" class="panel"><div class="empty">Haritada bir il seçin veya yukarıdan il seçin.</div></div></div>
 </section>
 </main>
-<footer>Veri: Excel çalışma kitabından oluşturulan veri seti · Harita: OpenStreetMap / GeoJSON</footer>
+<footer>Veri: Excel çalışma kitabından oluşturulan veri seti · Harita: Türkiye il sınırları (GeoJSON)</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'"></script>
 <script>
@@ -259,7 +259,11 @@ async function loadGeo(){
       }
     }).addTo(map);
     const bounds=geoLayer.getBounds();
-    if(bounds.isValid())map.fitBounds(bounds,{padding:[12,12]});
+    if(bounds.isValid()){
+      map.fitBounds(bounds,{padding:[12,12]});
+      map.setMaxBounds(bounds.pad(0.06));
+      map.options.maxBoundsViscosity=1.0;
+    }
     const c=L.control({position:'bottomleft'});
     c.onAdd=()=>{
       const d=L.DomUtil.create('div','legend');
@@ -281,8 +285,11 @@ async function loadGeo(){
 async function init(){
   try{
     if(!window.L)throw new Error('Leaflet yüklenemedi. İnternet/CDN erişimini kontrol edin.');
-    map=L.map('map',{preferCanvas:false,zoomControl:true,dragging:true,touchZoom:true,scrollWheelZoom:true,doubleClickZoom:true,boxZoom:true,keyboard:true,tap:true,fadeAnimation:false,zoomAnimation:false,markerZoomAnimation:false}).setView([39,35],5.7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18,updateWhenIdle:true,keepBuffer:1}).addTo(map);
+    map=L.map('map',{
+      preferCanvas:false,zoomControl:true,dragging:true,touchZoom:true,scrollWheelZoom:true,
+      doubleClickZoom:true,boxZoom:true,keyboard:true,tap:true,fadeAnimation:false,
+      zoomAnimation:false,markerZoomAnimation:false,minZoom:5,maxZoom:9
+    }).setView([39,35],5.7);
     $('map').querySelector('.loading')?.remove();
     const status=document.createElement('div');status.id='map-status';status.className='map-status';status.textContent='İl sınırları yükleniyor…';$('map').appendChild(status);
     const dataPromise=fetchJson('data.json',15000);
