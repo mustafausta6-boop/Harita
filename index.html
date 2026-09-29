@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2563eb">
-<title>Türkiye GSİM Antrenör Dağılım Sistemi</title>
+<title>Türkiye Antrenör Dağılım Sistemi</title>
 <link rel="preconnect" href="https://unpkg.com" crossorigin>
 <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -26,7 +26,7 @@ footer{max-width:1500px;margin:auto;padding:0 16px 20px;color:#8a94a4;font-size:
 </head>
 <body>
 <header><div class="head">
-<h1>Türkiye GSİM Antrenör Dağılım Sistemi</h1>
+<h1>Türkiye Antrenör Dağılım Sistemi</h1>
 <div class="desc">İl ve branş bazında antrenör mevcutlarını interaktif olarak görüntüleyin.</div>
 <div class="filters">
 <select id="province" aria-label="İl"><option value="">Tüm İller</option></select>
@@ -50,7 +50,11 @@ footer{max-width:1500px;margin:auto;padding:0 16px 20px;color:#8a94a4;font-size:
  onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'"></script>
 <script>
 'use strict';
-const GEO='https://raw.githubusercontent.com/cihadturhan/tr-geojson/master/geo/provinces.geojson';
+const GEO_CANDIDATES=[
+  'https://lab.cihadturhan.com/tr-geojson/geo/tr-cities-utf8.json',
+  'https://raw.githubusercontent.com/cihadturhan/tr-geojson/master/geo/tr-cities-utf8.json',
+  'https://cdn.jsdelivr.net/gh/cihadturhan/tr-geojson@master/geo/tr-cities-utf8.json'
+];
 let data=[],index=new Map(),provinceTotals=new Map(),comboTotals=new Map(),branchesSet=new Set();
 let map=null,geoLayer=null,selected='',mapMax=1,searchTimer=null;
 const $=id=>document.getElementById(id);
@@ -76,13 +80,16 @@ function updateKpi(){
 }
 function currentMapValue(p){const b=norm($('branch').value);return b?(comboTotals.get(key(p,b))||0):(provinceTotals.get(p)||0)}
 function updateMapScale(){const b=norm($('branch').value);mapMax=1;if(b){for(const p of index.keys())mapMax=Math.max(mapMax,comboTotals.get(key(p,b))||0)}else for(const v of provinceTotals.values())mapMax=Math.max(mapMax,v)}
-function style(f){const n=norm(f.properties.name||f.properties.NAME_1||f.properties.province),v=currentMapValue(n);return{color:'#fff',weight:norm(selected)===n?3:1,fillColor:'#2563eb',fillOpacity:v?.22+.65*v/mapMax:.08}}
-function refreshMap(){updateMapScale();if(geoLayer)geoLayer.setStyle(style)}
-function select(n,zoomIt=false){
- selected=index.get(norm(n))?.name||n;
- $('province').value=selected;
- render();
- if(zoomIt&&map)zoom(selected);
+function style(f){
+ const p=f.properties||{};
+ const n=norm(p.name||p.NAME_1||p.province||p.il_adi||p.il||p.city);
+ const v=currentMapValue(n);
+ return{
+   color:norm(selected)===n?'#111827':'#ffffff',
+   weight:norm(selected)===n?3:1.2,
+   fillColor:'#2563eb',
+   fillOpacity:v?.22+.65*v/mapMax:.16
+ };
 }
 function clearSelection(){
  selected='';
@@ -100,20 +107,52 @@ function render(){
 function searchFn(e){clearTimeout(searchTimer);const q=norm(e.target.value);searchTimer=setTimeout(()=>{if(!q)return;const p=[...index.values()].find(x=>norm(x.name).includes(q));if(p){select(p.name,true);return}const r=data.find(x=>norm(x.brans).includes(q));if(r){$('branch').value=r.brans;select(r.il,true)}},180)}
 async function fetchJson(url,timeout=12000){const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(url,{signal:c.signal,cache:'default'});if(!r.ok)throw new Error(url+' yüklenemedi');return await r.json()}finally{clearTimeout(t)}}
 async function loadGeo(){
+ let gj=null,usedUrl='',lastError=null;
+ for(const url of GEO_CANDIDATES){
+   try{ gj=await fetchJson(url,12000); usedUrl=url; break; }
+   catch(e){ lastError=e; }
+ }
+ if(!gj){
+   console.error('İl sınırları yüklenemedi:',lastError);
+   const s=$('map-status');
+   if(s){s.textContent='İl sınırları yüklenemedi. İnternet bağlantısını kontrol edin.';s.style.color='#991b1b';}
+   return false;
+ }
  try{
-  const gj=await fetchJson(GEO,9000);
-  geoLayer=L.geoJSON(gj,{style,onEachFeature:(f,l)=>{
-    const n=f.properties.name||f.properties.NAME_1||f.properties.province;
-    l.bindTooltip(n,{sticky:true});
-    l.on({
-      mouseover:e=>{e.target.setStyle({weight:2,fillOpacity:.9});},
-      mouseout:e=>{geoLayer.resetStyle(e.target);e.target.setStyle(style(e.target.feature));},
-      click:e=>{L.DomEvent.stopPropagation(e);select(n,true);}
-    });
-  }}).addTo(map);
-  const c=L.control({position:'bottomleft'});c.onAdd=()=>{const d=L.DomUtil.create('div','legend');d.textContent='Koyu renk = daha yüksek mevcut';return d};c.addTo(map);
-  $('map-status')?.remove();
- }catch(e){console.warn('İl sınırları yüklenemedi:',e);$('map-status')?.remove()}
+   geoLayer=L.geoJSON(gj,{
+     style,
+     onEachFeature:(f,l)=>{
+       const p=f.properties||{};
+       const n=p.name||p.NAME_1||p.province||p.il_adi||p.il||p.city;
+       if(!n)return;
+       l.bindTooltip(n,{sticky:true});
+       l.on({
+         mouseover:e=>{e.target.setStyle({weight:2,color:'#111827',fillOpacity:.88});e.target.bringToFront();},
+         mouseout:e=>{geoLayer.resetStyle(e.target);e.target.setStyle(style(e.target.feature));},
+         click:e=>{L.DomEvent.stopPropagation(e);select(n,true);}
+       });
+     }
+   }).addTo(map);
+
+   const bounds=geoLayer.getBounds();
+   if(bounds.isValid()) map.fitBounds(bounds,{padding:[12,12]});
+
+   const c=L.control({position:'bottomleft'});
+   c.onAdd=()=>{
+     const d=L.DomUtil.create('div','legend');
+     d.textContent='Koyu renk = daha yüksek mevcut · İl seçmek için tıklayın';
+     return d;
+   };
+   c.addTo(map);
+   $('map-status')?.remove();
+   console.info('İl sınırları yüklendi:',usedUrl);
+   return true;
+ }catch(e){
+   console.error('GeoJSON işlenemedi:',e);
+   const s=$('map-status');
+   if(s){s.textContent='İl sınırları okunamadı.';s.style.color='#991b1b';}
+   return false;
+ }
 }
 async function init(){
  try{
