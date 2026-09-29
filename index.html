@@ -77,7 +77,17 @@ function currentMapValue(p){const b=norm($('branch').value);return b?(comboTotal
 function updateMapScale(){const b=norm($('branch').value);mapMax=1;if(b){for(const p of index.keys())mapMax=Math.max(mapMax,comboTotals.get(key(p,b))||0)}else for(const v of provinceTotals.values())mapMax=Math.max(mapMax,v)}
 function style(f){const n=norm(f.properties.name||f.properties.NAME_1||f.properties.province),v=currentMapValue(n);return{color:'#fff',weight:norm(selected)===n?3:1,fillColor:'#2563eb',fillOpacity:v?.22+.65*v/mapMax:.08}}
 function refreshMap(){updateMapScale();if(geoLayer)geoLayer.setStyle(style)}
-function select(n,zoomIt=false){selected=n;$('province').value=index.get(norm(n))?.name||n;render();if(zoomIt&&map)zoom(n)}
+function select(n,zoomIt=false){
+ selected=index.get(norm(n))?.name||n;
+ $('province').value=selected;
+ render();
+ if(zoomIt&&map)zoom(selected);
+}
+function clearSelection(){
+ selected='';
+ $('province').value='';
+ render();
+}
 function zoom(n){if(!geoLayer)return;geoLayer.eachLayer(l=>{const x=l.feature?.properties?.name||l.feature?.properties?.NAME_1||l.feature?.properties?.province;if(norm(x)===norm(n))map.fitBounds(l.getBounds(),{padding:[18,18],maxZoom:8})})}
 function render(){
  updateKpi();refreshMap();
@@ -91,7 +101,15 @@ async function fetchJson(url,timeout=12000){const c=new AbortController(),t=setT
 async function loadGeo(){
  try{
   const gj=await fetchJson(GEO,9000);
-  geoLayer=L.geoJSON(gj,{style,onEachFeature:(f,l)=>{const n=f.properties.name||f.properties.NAME_1||f.properties.province;l.bindTooltip(n,{sticky:true});l.on({mouseover:e=>e.target.setStyle({weight:2,fillOpacity:.9}),mouseout:e=>geoLayer.resetStyle(e.target),click:()=>select(n,true)})}}).addTo(map);
+  geoLayer=L.geoJSON(gj,{style,onEachFeature:(f,l)=>{
+    const n=f.properties.name||f.properties.NAME_1||f.properties.province;
+    l.bindTooltip(n,{sticky:true});
+    l.on({
+      mouseover:e=>{e.target.setStyle({weight:2,fillOpacity:.9});},
+      mouseout:e=>{geoLayer.resetStyle(e.target);e.target.setStyle(style(e.target.feature));},
+      click:e=>{L.DomEvent.stopPropagation(e);select(n,true);}
+    });
+  }}).addTo(map);
   const c=L.control({position:'bottomleft'});c.onAdd=()=>{const d=L.DomUtil.create('div','legend');d.textContent='Koyu renk = daha yüksek mevcut';return d};c.addTo(map);
   $('map-status')?.remove();
  }catch(e){console.warn('İl sınırları yüklenemedi:',e);$('map-status')?.remove()}
@@ -110,7 +128,13 @@ async function init(){
   if(!Array.isArray(data))throw new Error('data.json bir dizi içermiyor');
   aggregate();fill();updateKpi();
   await geoPromise;
-  if(map)map.invalidateSize();
+  if(map){
+    map.on('click',e=>{
+      // Harita boş alanına dokunulduğunda seçim kaldırılır; il alanına tıklama stopPropagation ile korunur.
+      if(e.originalEvent?.target===map.getContainer()) clearSelection();
+    });
+    map.invalidateSize();
+  }
  }catch(e){console.error(e);$('panel').innerHTML='<div class="error"><b>Veri yüklenemedi.</b><br>data.json dosyasının index.html ile aynı klasörde olduğundan emin olun.</div>'}
 }
 $('province').addEventListener('change',e=>{selected=e.target.value;render();if(selected)zoom(selected)});
