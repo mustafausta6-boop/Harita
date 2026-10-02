@@ -5,7 +5,7 @@ HARİTA TÜRKİYE SÜRÜMÜ
 - Dünya/OSM altlığı kaldırıldı.
 - Haritada yalnızca Türkiye il sınırları gösteriliyor.
 - Harita Türkiye sınırları içinde tutuluyor.
-
+Mustafa
 Kurulum:
 index.html ve data.json dosyalarını GitHub'daki Harita deposunun ana dizinine birlikte yükleyin/değiştirin.
 Kod incelemesi
