@@ -8,4 +8,4 @@ HARİTA TÜRKİYE SÜRÜMÜ
 
 Kurulum:
 index.html ve data.json dosyalarını GitHub'daki Harita deposunun ana dizinine birlikte yükleyin/değiştirin.
-Kod incelemesi
+Kod incelemesi deneme
